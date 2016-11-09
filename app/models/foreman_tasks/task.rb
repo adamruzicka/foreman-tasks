@@ -159,10 +159,22 @@ module ForemanTasks
       (groups - task_groups).each { |group| task_groups << group }
     end
 
+    def external_presenter
+      unless external_presenter_class.nil?
+        @external_presenter ||= external_presenter_class.new(self)
+      end 
+    end
+
     protected
 
     def generate_id
       self.id ||= SecureRandom.uuid
+    end
+
+    private
+
+    def external_presenter_class
+      main_action.external_presenter_class
     end
   end
 end

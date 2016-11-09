@@ -1,0 +1,12 @@
+<% if presenter.nil? %>
+    <%= alert(:close => false, :class => 'alert-info', :header => '',
+              :text => _("This task does not have an external task.")) %>
+<% else %>
+    <% if presenter.load_external_data! %>
+        <%= render :partial => presenter, :locals => presenter.locals %>
+    <% else %>
+        <%= alert(:close => false, :class => 'alert-warning', :header => _("The data from #{presenter.data_source_name} could not be loaded (#{presenter.exception.class.name})"),
+                  :text => content_tag(:p, presenter.exception.try(:message))) %>
+    <% end %>
+<% end %>
+      

@@ -1,0 +1,102 @@
+<div class="row">
+  <%= section_title(_('General'), 'fa fa-info-circle') %>
+  <div class="col-md-6">
+    <div>
+      <span class="param-name list-group-item-heading"><%= _("Name") %>:</span>
+      <% action = presenter.action_name %>
+      <span class="param-value" data-original-title="<%= action %>" rel="twipsy"> <%= truncate(action, :length => 50) %></span>
+    </div>
+    <div>
+      <span class="param-name list-group-item-heading"><%= _("UUID") %>:</span>
+      <span class="param-value">
+        <%= presenter.link_to_external_task %>
+      </span>
+    </div>
+    <div>
+      <span class="param-name list-group-item-heading"><%= _("State") %>:</span>
+      <span class="param-value">
+        <%= data['state'] %>
+      </span>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div>
+      <span class="param-name list-group-item-heading"><%= _("Started at") %>:</span>
+      <span class="param-value"><%= time_in_words_span data['started_at'].try(:in_time_zone) %></span>
+    </div>
+    <div>
+      <span class="param-name list-group-item-heading"><%= _("Ended at") %>:</span>
+      <span class="param-value"><%= time_in_words_span data['ended_at'].try(:in_time_zone) %></span>
+    </div>
+    <div>
+      <span class="param-name list-group-item-heading"><%= _("Result") %>:</span>
+        <span class="param-value">
+          <%= presenter.result_tag %>
+        </span>
+    </div>
+  </div>
+</div>
+
+<hr/>
+
+<div class="row">
+  <%= section_title(_('Actions'), 'pf pficon-service') %>
+  <div class="col-md-12">
+  <table class="table">
+    <thead>
+    <tr>
+      <th>Action state</th>
+      <th>Action class</th>
+      <th>Plan state</th>
+      <th>Run state</th>
+      <th>Finalize state</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% presenter.actions.values.each do |action| %>
+      <tr>
+        <td><span class="<%= presenter.list_item_icon(action) %>"> </span>
+          <%= presenter.action_state(action) %>
+        </td>
+        <td><%= action['plan_step']['action_class'] %></td>
+        <% %w(plan run finalize).each do |kind| %>
+        <td>
+          <% if action.key?("#{kind}_step") %>
+          <span class="<%= presenter.state_icon(action["#{kind}_step"]) %>"> </span>
+              <%= action["#{kind}_step"]['state'] %>
+          <% end %></td>
+        <% end %>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+    </div>
+</div>
+
+<hr/>
+
+<div class="row">
+  <%= section_title(_('Execution history'), 'pf pficon-history') %>
+  <div class="col-md-12">
+    <table class="table">
+      <thead>
+      <tr>
+        <th>Event</th>
+        <th>Time</th>
+        <th>World ID</th>
+      </tr>
+      </thead>
+      <tbody>
+      <% data['execution_history'].each do |entry| %>
+          <tr>
+            <td><%= entry['name'] %></td>
+            <td><%= entry['time'] %></td>
+            <td><%= entry['world_id'] %></td>
+          </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+

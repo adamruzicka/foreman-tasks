@@ -93,6 +93,7 @@
     <li><a href="#errors" data-toggle="tab"><%= _("Errors") %></a></li>
     <li><a href="#locks" data-toggle="tab"><%= _("Locks") %></a></li>
     <li><a href="#raw" data-toggle="tab"><%= _("Raw") %></a></li>
+    <li><a href="#external" data-toggle="tab"><%= _("External") %></a></li>
   </ul>
 
   <div class="tab-content">
@@ -111,6 +112,8 @@
     <div class="tab-pane" id="locks">
       <%= render :partial => 'locks' %>
     </div>
-
+    <div class="tab-pane" id="external">
+      <%= render :partial => 'external', :locals => { :presenter => @task.external_presenter } %>
+    </div>
   <% end %>
 </div>

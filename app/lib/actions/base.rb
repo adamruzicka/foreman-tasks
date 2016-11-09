@@ -59,5 +59,8 @@ module Actions
     def serializer_class
       ::Actions::Serializers::ActiveRecordSerializer
     end
+
+    def external_presenter_class
+    end
   end
 end
