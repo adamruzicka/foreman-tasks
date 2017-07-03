@@ -129,7 +129,8 @@ module ForemanTasks
     end
 
     def initialize_executor(world)
-      if remote?
+      if remote? ||
+        (defined?(::Rake) && ::Rake.application.top_level_tasks.any? { |task| task.include? 'foreman_tasks:ping' })
         false
       else
         ::Dynflow::Executors::Parallel.new(world, pool_size)
