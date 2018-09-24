@@ -30,18 +30,14 @@ module ForemanTasks
         # using uniq suffix to avoid colisions when searching by two different owners via ScopedSearch
         uniq_suffix = SecureRandom.hex(3)
         key_name = connection.quote_column_name(key.sub(/^.*\./, ''))
-        if value.include?('*')
-          value.gsub!('*', '%%')
-        else
-          value = "%%#{value}%%" if ['ILIKE', 'NOT ILIKE'].include? operator
-        end
+        value = sanitize_value_for_searching(value, operator)
         condition = if key.blank?
                       sanitize_sql_for_conditions(["users_#{uniq_suffix}.login #{operator} ? or users_#{uniq_suffix}.firstname #{operator} ? ", value, value])
                     elsif key =~ /\.id\Z/
                       value = User.current.id if value == 'current_user'
                       sanitize_sql_for_conditions(["foreman_tasks_tasks.user_id #{operator} ?", value])
                     else
-                      placeholder, value = ['IN', 'NOT IN'].include?(operator) ? ['(?)', value.split(',').map(&:strip)] : ['?', value]
+                      placeholder = value.kind_of?(Array) ? '(?)' : '?'
                       sanitize_sql_for_conditions(["users_#{uniq_suffix}.#{key_name} #{operator} #{placeholder}", value])
                     end
         { :conditions => condition, :joins => joins_for_user_search(key, uniq_suffix) }
@@ -50,6 +46,18 @@ module ForemanTasks
       def joins_for_user_search(key, uniq_suffix)
         return '' if key =~ /\.id\Z/
         "INNER JOIN users AS users_#{uniq_suffix} ON users_#{uniq_suffix}.id = foreman_tasks_tasks.user_id"
+      end
+
+      def sanitize_value_for_searching(value, operator)
+        if value.include?('*')
+          value.gsub('*', '%%')
+        elsif ['ILIKE', 'NOT ILIKE'].include? operator
+          "%%#{value}%%"
+        elsif ['IN', 'NOT IN'].include? operator
+          value.split(',').map(&:strip)
+        else
+          value
+        end
       end
     end
   end

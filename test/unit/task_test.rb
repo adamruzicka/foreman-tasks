@@ -61,7 +61,7 @@ class TasksTest < ActiveSupport::TestCase
       SecureRandom.stubs(:hex).returns('abc')
       assert_equal ForemanTasks::Task.search_for("user !~ #{part}").to_sql,
                    ForemanTasks::Task.search_for("user !~ *#{part}*").to_sql
-      end
+    end
 
     test 'can search the tasks by array' do
       assert_equal [@task_one], ForemanTasks::Task.search_for("user ^ (this_user, #{@user_one.login}, that_user)")
