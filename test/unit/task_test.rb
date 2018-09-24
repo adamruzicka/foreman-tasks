@@ -26,18 +26,45 @@ class TasksTest < ActiveSupport::TestCase
       assert_equal [@task_one], ForemanTasks::Task.search_for("user = #{@user_one.login}")
     end
 
+    test 'can search the tasks by negated user' do
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user != #{@user_two.login}")
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user <> #{@user_two.login}")
+      SecureRandom.stubs(:hex).returns('abc')
+      assert_equal ForemanTasks::Task.search_for("user != #{@user_two.login}").to_sql,
+                   ForemanTasks::Task.search_for("user <> #{@user_two.login}").to_sql
+    end
+
     test 'can search the tasks by user\'s id' do
       assert_equal [@task_one], ForemanTasks::Task.search_for("user.id = #{@user_one.id}")
       assert_equal [@task_one], ForemanTasks::Task.search_for("owner.id = #{@user_one.id}")
     end
 
     test 'can search the tasks by user with wildcards' do
-      glob = '*' + @user_one.login[1..-1] # search for '*ser1' if login is 'user1'
-      assert_equal [@task_one], ForemanTasks::Task.search_for("user ~ #{glob}")
+      part = @user_one.login[1..-1] # search for '*ser1' if login is 'user1'
+      # The following two should be equivalent
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user ~ #{part}")
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user ~ *#{part}*")
+      SecureRandom.stubs(:hex).returns('abc')
+      assert_equal ForemanTasks::Task.search_for("user ~ #{part}").to_sql,
+                   ForemanTasks::Task.search_for("user ~ *#{part}*").to_sql
     end
+
+    test 'can search the tasks by user with negated wildcards' do
+      part = @user_two.login[1..-1] # search for '*ser1' if login is 'user1'
+      # The following two should be equivalent
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user !~ #{part}")
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user !~ *#{part}*")
+      SecureRandom.stubs(:hex).returns('abc')
+      assert_equal ForemanTasks::Task.search_for("user !~ #{part}").to_sql,
+                   ForemanTasks::Task.search_for("user !~ *#{part}*").to_sql
+      end
 
     test 'can search the tasks by array' do
       assert_equal [@task_one], ForemanTasks::Task.search_for("user ^ (this_user, #{@user_one.login}, that_user)")
+    end
+
+    test 'can search the tasks by negated array' do
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user !^ (this_user, #{@user_two.login}, that_user)")
     end
   end
 
