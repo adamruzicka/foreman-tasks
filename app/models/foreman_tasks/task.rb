@@ -187,7 +187,7 @@ module ForemanTasks
     def self.sanitize_value_for_searching(value, operator)
       if value.include?('*')
         value.gsub('*', '%%')
-      elsif ['ILIKE', 'NOT ILIKE'].include? operator
+      elsif operator =~ /^(NOT )?I?LIKE/ # Postgres uses ILIKE, MySQL uses LIKE
         "%%#{value}%%"
       elsif ['IN', 'NOT IN'].include? operator
         value.split(',').map(&:strip)
