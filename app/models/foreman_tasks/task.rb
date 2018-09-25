@@ -3,6 +3,7 @@ require 'securerandom'
 module ForemanTasks
   class Task < ApplicationRecord
     include Authorizable
+    extend Search
 
     def check_permissions_after_save
       # there's no create_tasks permission, tasks are created as a result of internal actions, in such case we
@@ -140,77 +141,6 @@ module ForemanTasks
       [self].tap do |ret|
         ret.concat(parent_task.self_and_parents) if parent_task
       end
-    end
-
-    def self.search_by_generic_resource(key, operator, value)
-      key = 'resource_type' if key.blank?
-      key_name = connection.quote_column_name(key.sub(/^.*\./, ''))
-      condition = sanitize_sql_for_conditions(["foreman_tasks_locks.#{key_name} #{operator} ?", value])
-
-      { :conditions => condition, :joins => :locks }
-    end
-
-    def self.search_by_taxonomy(key, operator, value)
-      uniq_suffix = SecureRandom.hex(3)
-      resource_type = key == 'location_id' ? 'Location' : 'Organization'
-
-      joins = <<-SQL
-      LEFT JOIN foreman_tasks_locks AS foreman_tasks_locks_taxonomy#{uniq_suffix}
-      ON (foreman_tasks_locks_taxonomy#{uniq_suffix}.task_id = foreman_tasks_tasks.id AND
-          foreman_tasks_locks_taxonomy#{uniq_suffix}.resource_type = '#{resource_type}')
-      SQL
-      # Select only those tasks which either have the correct taxonomy or are not related to any
-      sql = "foreman_tasks_locks_taxonomy#{uniq_suffix}.resource_id #{operator} ? OR foreman_tasks_locks_taxonomy#{uniq_suffix}.resource_id IS NULL"
-      { :conditions => sanitize_sql_for_conditions([sql, value]), :joins => joins }
-    end
-
-    def self.search_by_owner(key, operator, value)
-      return { :conditions => '0 = 1' } if value == 'current_user' && User.current.nil?
-
-      key = 'owners.login' if key == 'user'
-      # using uniq suffix to avoid colisions when searching by two different owners via ScopedSearch
-      uniq_suffix = SecureRandom.hex(3)
-      key_name = connection.quote_column_name(key.sub(/^.*\./, ''))
-      value = sanitize_value_for_searching(value, operator)
-      placeholder = value.kind_of?(Array) ? '(?)' : '?'
-      condition = if key.blank?
-                    sanitize_sql_for_conditions(["users#{uniq_suffix}.login #{operator} ? or users#{uniq_suffix}.firstname #{operator} ? ", value, value])
-                  elsif key =~ /\.id\Z/
-                    raise ScopedSearch::QueryNotSupported, _("Operator '~' is not valid for numeric fields") if operator =~ /LIKE/
-                    value = User.current.id if value == 'current_user'
-                    sanitize_sql_for_conditions(["foreman_tasks_locks_owner#{uniq_suffix}.resource_id #{operator} #{placeholder}", value])
-                  else
-                    sanitize_sql_for_conditions(["users#{uniq_suffix}.#{key_name} #{operator} #{placeholder}", value])
-                  end
-      { :conditions => condition, :joins => joins_for_user_search(key, uniq_suffix) }
-    end
-
-    def self.sanitize_value_for_searching(value, operator)
-      if value.include?('*')
-        value.gsub('*', '%%')
-      elsif operator =~ /^(NOT )?I?LIKE/ # Postgres uses ILIKE, MySQL uses LIKE
-        "%%#{value}%%"
-      elsif ['IN', 'NOT IN'].include? operator
-        value.split(',').map(&:strip)
-      else
-        value
-      end
-    end
-
-    def self.joins_for_user_search(key, uniq_suffix)
-      joins = <<-SQL
-      INNER JOIN foreman_tasks_locks AS foreman_tasks_locks_owner#{uniq_suffix}
-                 ON (foreman_tasks_locks_owner#{uniq_suffix}.task_id = foreman_tasks_tasks.id AND
-                     foreman_tasks_locks_owner#{uniq_suffix}.resource_type = 'User' AND
-                     foreman_tasks_locks_owner#{uniq_suffix}.name = '#{Lock::OWNER_LOCK_NAME}')
-      SQL
-      if key !~ /\.id\Z/
-        joins << <<-SQL
-        INNER JOIN users as users#{uniq_suffix}
-                   ON (users#{uniq_suffix}.id = foreman_tasks_locks_owner#{uniq_suffix}.resource_id)
-        SQL
-      end
-      joins
     end
 
     def progress
