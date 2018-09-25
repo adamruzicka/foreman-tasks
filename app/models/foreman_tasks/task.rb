@@ -172,13 +172,14 @@ module ForemanTasks
       uniq_suffix = SecureRandom.hex(3)
       key_name = connection.quote_column_name(key.sub(/^.*\./, ''))
       value = sanitize_value_for_searching(value, operator)
+      placeholder = value.kind_of?(Array) ? '(?)' : '?'
       condition = if key.blank?
                     sanitize_sql_for_conditions(["users#{uniq_suffix}.login #{operator} ? or users#{uniq_suffix}.firstname #{operator} ? ", value, value])
                   elsif key =~ /\.id\Z/
+                    raise ScopedSearch::QueryNotSupported, _("Operator '~' is not valid for numeric fields") if operator =~ /LIKE/
                     value = User.current.id if value == 'current_user'
-                    sanitize_sql_for_conditions(["foreman_tasks_locks_owner#{uniq_suffix}.resource_id #{operator} ?", value])
+                    sanitize_sql_for_conditions(["foreman_tasks_locks_owner#{uniq_suffix}.resource_id #{operator} #{placeholder}", value])
                   else
-                    placeholder = value.kind_of?(Array) ? '(?)' : '?'
                     sanitize_sql_for_conditions(["users#{uniq_suffix}.#{key_name} #{operator} #{placeholder}", value])
                   end
       { :conditions => condition, :joins => joins_for_user_search(key, uniq_suffix) }

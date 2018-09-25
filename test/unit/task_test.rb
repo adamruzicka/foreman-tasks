@@ -37,6 +37,20 @@ class TasksTest < ActiveSupport::TestCase
     test 'can search the tasks by user\'s id' do
       assert_equal [@task_one], ForemanTasks::Task.search_for("user.id = #{@user_one.id}")
       assert_equal [@task_one], ForemanTasks::Task.search_for("owner.id = #{@user_one.id}")
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user.id != #{@user_two.id}")
+      assert_equal [@task_one], ForemanTasks::Task.search_for("owner.id != #{@user_two.id}")
+    end
+
+    test 'can search by array of user ids' do
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user.id ^ (#{@user_one.id})")
+      assert_equal [@task_one], ForemanTasks::Task.search_for("owner.id ^  (#{@user_one.id})")
+      assert_equal [@task_one], ForemanTasks::Task.search_for("user.id !^ (#{@user_two.id})")
+      assert_equal [@task_one], ForemanTasks::Task.search_for("owner.id !^ (#{@user_two.id})")
+    end
+
+    test 'cannot glob on user\'s id' do
+      proc { ForemanTasks::Task.search_for("user.id ~ something") }.must_raise(ScopedSearch::QueryNotSupported)
+      proc { ForemanTasks::Task.search_for("user.id ~ 5") }.must_raise(ScopedSearch::QueryNotSupported)
     end
 
     test 'can search the tasks by user with wildcards' do
