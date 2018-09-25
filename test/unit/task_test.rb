@@ -30,6 +30,11 @@ class TasksTest < ActiveSupport::TestCase
       assert_equal [@task_one], ForemanTasks::Task.search_for("user = #{@user_one.login}")
     end
 
+    test 'cannot search by arbitrary key' do
+      proc { ForemanTasks::Task.search_for('user.my_key ~ 5') }.must_raise(ScopedSearch::QueryNotSupported)
+      proc { ForemanTasks::Task.search_for('user. = 5') }.must_raise(ScopedSearch::QueryNotSupported)
+    end
+
     test 'can search the tasks by negated user' do
       assert_equal [@task_one], ForemanTasks::Task.search_for("user != #{@user_two.login}")
       assert_equal [@task_one], ForemanTasks::Task.search_for("user <> #{@user_two.login}")
