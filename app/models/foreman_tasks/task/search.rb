@@ -26,6 +26,10 @@ module ForemanTasks
       def search_by_owner(key, operator, value)
         return { :conditions => '0 = 1' } if value == 'current_user' && User.current.nil?
 
+        if key.present? && key !~ /^(user|owners?)(\.(id|login|firstname))?$/
+          raise ScopedSearch::QueryNotSupported, _("Field '%{field}' not supported for searching") % { :field => key }
+        end
+
         key = 'owners.login' if key == 'user'
         # using uniq suffix to avoid colisions when searching by two different owners via ScopedSearch
         uniq_suffix = SecureRandom.hex(3)
