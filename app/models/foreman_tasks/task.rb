@@ -51,7 +51,7 @@ module ForemanTasks
                   :special_values => %w[current_user],
                   :value_translation => ->(value) { value == 'current_user' ? User.current.id : value },
                   :aliases => ['owner.id'], :only_explicit => true
-    scoped_search :relation => :user, :on => :login, :rename => 'user.login', :complete_value => true, :aliases => ['owner.login', 'user'], :only_explicit => true
+    scoped_search :relation => :user, :on => :login, :rename => 'user.login', :complete_value => true, :aliases => ['owner.login'], :only_explicit => true
     scoped_search :relation => :user, :on => :firstname, :rename => 'user.firstname', :complete_value => true, :aliases => ['owner.firstname'], :only_explicit => true
     scoped_search :relation => :task_groups, :on => :id, :complete_value => true, :rename => 'task_group.id', :validator => ScopedSearch::Validators::INTEGER
 
