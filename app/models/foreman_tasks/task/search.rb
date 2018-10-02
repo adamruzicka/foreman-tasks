@@ -33,24 +33,29 @@ module ForemanTasks
         key = 'owners.login' if key == 'user'
         # using uniq suffix to avoid colisions when searching by two different owners via ScopedSearch
         uniq_suffix = SecureRandom.hex(3)
-        key_name = connection.quote_column_name(key.sub(/^.*\./, ''))
         value = sanitize_value_for_searching(value, operator)
-        placeholder = value.kind_of?(Array) ? '(?)' : '?'
-        condition = if key.blank?
-                      sanitize_sql_for_conditions(["users_#{uniq_suffix}.login #{operator} ? or users_#{uniq_suffix}.firstname #{operator} ? ", value, value])
-                    elsif key =~ /\.id\Z/
-                      raise ScopedSearch::QueryNotSupported, _("Operator '~' is not valid for numeric fields") if operator =~ /LIKE/
-                      value = User.current.id if value == 'current_user'
-                      sanitize_sql_for_conditions(["foreman_tasks_tasks.user_id #{operator} #{placeholder}", value])
-                    else
-                      sanitize_sql_for_conditions(["users_#{uniq_suffix}.#{key_name} #{operator} #{placeholder}", value])
-                    end
-        { :conditions => condition, :joins => joins_for_user_search(key, uniq_suffix) }
+
+        { :joins => joins_for_user_search(key, uniq_suffix),
+          :conditions => conditions_for_user_search(key, value, operator, uniq_suffix) }
       end
 
       def joins_for_user_search(key, uniq_suffix)
         return '' if key =~ /\.id\Z/
         "INNER JOIN users AS users_#{uniq_suffix} ON users_#{uniq_suffix}.id = foreman_tasks_tasks.user_id"
+      end
+
+      def conditions_for_user_search(key, value, operator, uniq_suffix)
+        placeholder = value.kind_of?(Array) ? '(?)' : '?'
+        if key.blank?
+          sanitize_sql_for_conditions(["users_#{uniq_suffix}.login #{operator} ? or users_#{uniq_suffix}.firstname #{operator} ? ", value, value])
+        elsif key =~ /\.id\Z/
+          raise ScopedSearch::QueryNotSupported, _("Operator '~' is not valid for numeric fields") if operator =~ /LIKE/
+          value = User.current.id if value == 'current_user'
+          sanitize_sql_for_conditions(["foreman_tasks_tasks.user_id #{operator} #{placeholder}", value])
+        else
+          key_name = connection.quote_column_name(key.sub(/^.*\./, ''))
+          sanitize_sql_for_conditions(["users_#{uniq_suffix}.#{key_name} #{operator} #{placeholder}", value])
+        end
       end
 
       def sanitize_value_for_searching(value, operator)
