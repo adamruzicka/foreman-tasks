@@ -29,7 +29,7 @@ module Actions
       def batch_trigger_pending
         in_remote_task_batches(remote_tasks.pending) do |group|
           # TODO: Un-hardcode the action class string
-          ForemanTasks::RemoteTask.batch_trigger(group, 'ForemanTasksCore::Runner::ParentAction')
+          ForemanTasks::RemoteTask.batch_trigger(group, 'ForemanTasksCore::Runner::Action::Parent')
         end
       end
 
