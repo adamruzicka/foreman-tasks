@@ -5,7 +5,13 @@ module ForemanTasksCore
         include Dynflow::Action::WithSubPlans
         include Dynflow::Action::WithPollingSubPlans
 
-        # { task_id => { :action_class => Klass, :input => input } }
+        def self.input_format
+          {
+            # The keys are task ids to map the results to
+            "179d43e7-5025-4418-9eab-43aa563c8f86" => Single.input_format
+          }
+        end
+
         def plan(launcher, input_hash)
           launcher.launch_children(self, input_hash)
           plan_self
