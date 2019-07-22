@@ -47,6 +47,10 @@ Foreman::Application.routes.draw do
     if ForemanTasks.dynflow.required?
       require 'dynflow/web'
       mount ForemanTasks.dynflow.web_console => '/dynflow'
+      if Rails.env.development?
+        require 'sidekiq/web'
+        mount Sidekiq::Web => '/sidekiq'
+      end
     end
   end
 end
