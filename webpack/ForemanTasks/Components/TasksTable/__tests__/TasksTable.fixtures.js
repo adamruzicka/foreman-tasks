@@ -1,6 +1,7 @@
 import { STATUS } from 'foremanReact/constants';
 
 export const minProps = {
+  getActionName: jest.fn(),
   getTableItems: jest.fn(),
   getBreadcrumbs: jest.fn(),
   itemCount: 2,

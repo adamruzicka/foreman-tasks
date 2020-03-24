@@ -1,7 +1,9 @@
 import { createSelector } from 'reselect';
 import { translate as __ } from 'foremanReact/common/I18n';
+import { selectAPIResponse } from 'foremanReact/redux/API/APISelectors';
 import { selectForemanTasks } from '../../ForemanTasksSelectors';
 import { getDuration } from './TasksTableHelpers';
+import { TASK_DETAILS_ID } from './TasksTableConstants';
 
 export const selectTasksTable = state =>
   selectForemanTasks(state).tasksTable || {};
@@ -19,7 +21,7 @@ export const selectItemCount = state =>
   selectTasksTableQuery(state).itemCount || 0;
 
 export const selectActionName = state =>
-  selectTasksTableQuery(state).actionName || '';
+  selectAPIResponse(state, TASK_DETAILS_ID).action || '';
 
 export const selectSelectedRows = state =>
   selectTasksTableQuery(state).selectedRows || [];

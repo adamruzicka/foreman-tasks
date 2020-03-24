@@ -1,6 +1,7 @@
 import { getURIQuery } from 'foremanReact/common/helpers';
 import { getTableItemsAction } from 'foremanReact/components/common/table';
 import API from 'foremanReact/API';
+import { get } from 'foremanReact/redux/API';
 import { addToast } from 'foremanReact/redux/actions/toasts';
 import { translate as __, sprintf } from 'foremanReact/common/I18n';
 import URI from 'urijs';
@@ -13,6 +14,7 @@ import {
   TASKS_RESUME_REQUEST,
   TASKS_RESUME_SUCCESS,
   TASKS_RESUME_FAILURE,
+  TASK_DETAILS_ID,
 } from './TasksTableConstants';
 import { getApiPathname } from './TasksTableHelpers';
 import { fetchTasksSummary } from '../TasksDashboard/TasksDashboardActions';
@@ -203,3 +205,9 @@ export const openClickedModal = ({ taskId, taskName, setModalOpen }) => {
     payload: { clicked: { taskId, taskName } },
   };
 };
+
+export const getActionName = id =>
+  get({
+    key: TASK_DETAILS_ID,
+    url: `/foreman_tasks/api/tasks/${id}/details`,
+  });

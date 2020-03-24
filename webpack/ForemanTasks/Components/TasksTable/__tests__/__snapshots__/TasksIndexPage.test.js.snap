@@ -5,6 +5,7 @@ exports[`TasksIndexPage rendering render with minimal props 1`] = `
   bulkCancel={[MockFunction]}
   bulkResume={[MockFunction]}
   cancelTask={[MockFunction]}
+  getActionName={[MockFunction]}
   getBreadcrumbs={[MockFunction]}
   getTableItems={[MockFunction]}
   history={

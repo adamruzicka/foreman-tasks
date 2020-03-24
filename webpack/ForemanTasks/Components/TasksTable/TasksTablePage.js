@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { getURIsearch } from 'foremanReact/common/urlHelpers';
 import { Spinner } from 'patternfly-react';
@@ -22,7 +22,19 @@ import {
 import { ActionSelectButton } from './Components/ActionSelectButton';
 import './TasksTablePage.scss';
 
-const TasksTablePage = ({ getBreadcrumbs, history, clicked, createHeader, ...props }) => {
+const TasksTablePage = ({
+  getBreadcrumbs,
+  history,
+  clicked,
+  createHeader,
+  parentTaskID,
+  getActionName,
+  ...props
+}) => {
+  useEffect(() => {
+    if (parentTaskID) getActionName(parentTaskID);
+  }, [parentTaskID, getActionName]);
+
   const url = history.location.pathname + history.location.search;
   const uriQuery = getURIQuery(url);
   const onSearch = searchQuery => {
@@ -52,13 +64,7 @@ const TasksTablePage = ({ getBreadcrumbs, history, clicked, createHeader, ...pro
     resumeModal: useForemanModal({ id: RESUME_CONFIRM_MODAL_ID }),
   };
 
-  const {
-    bulkCancel,
-    bulkResume,
-    cancelTask,
-    resumeTask,
-    parentTaskID,
-  } = props;
+  const { bulkCancel, bulkResume, cancelTask, resumeTask } = props;
   const tasksActions = {
     cancelSelectedTasks: () => {
       bulkCancel({ selected: getSelectedTasks(), url, parentTaskID });
@@ -114,7 +120,7 @@ const TasksTablePage = ({ getBreadcrumbs, history, clicked, createHeader, ...pro
         }
         searchQuery={getURIsearch()}
         beforeToolbarComponent={
-          <TasksDashboard history={history} parentTaskID={props.parentTaskID} />
+          <TasksDashboard history={history} parentTaskID={parentTaskID} />
         }
       >
         <TasksTable history={history} {...props} modalProps={modalProps} />
@@ -142,6 +148,7 @@ TasksTablePage.propTypes = {
     taskName: PropTypes.string,
     parentTaskID: PropTypes.string,
   }),
+  getActionName: PropTypes.func.isRequired,
 };
 
 TasksTablePage.defaultProps = {

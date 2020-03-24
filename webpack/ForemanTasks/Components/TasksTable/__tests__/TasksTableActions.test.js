@@ -1,5 +1,6 @@
 import { testActionSnapshotWithFixtures } from '@theforeman/test';
 import API from 'foremanReact/API';
+import { get } from 'foremanReact/redux/API';
 import { TASKS_TABLE_ID } from '../TasksTableConstants';
 import {
   getTableItems,
@@ -9,6 +10,7 @@ import {
   resumeTaskRequest,
   bulkCancel,
   bulkResume,
+  getActionName,
 } from '../TasksTableActions';
 
 jest.mock('foremanReact/components/common/table', () => ({
@@ -16,6 +18,7 @@ jest.mock('foremanReact/components/common/table', () => ({
 }));
 
 jest.mock('foremanReact/API');
+jest.mock('foremanReact/redux/API');
 
 API.post.mockImplementation(() => ({ data: 'some-data' }));
 
@@ -86,6 +89,14 @@ const fixtures = {
 describe('TasksTable actions', () => {
   it('getTableItems should reuse common/table/getTableItemsAction', () => {
     expect(getTableItems('')).toEqual(TASKS_TABLE_ID);
+  });
+  it('handles getActionName requests that fail', () => {
+    get.mockImplementation();
+    getActionName('some-id');
+    expect(get).toBeCalledWith({
+      key: 'TASK_DETAILS',
+      url: '/foreman_tasks/api/tasks/some-id/details',
+    });
   });
   testActionSnapshotWithFixtures(fixtures);
 });

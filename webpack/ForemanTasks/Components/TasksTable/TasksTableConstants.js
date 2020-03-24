@@ -1,6 +1,7 @@
 import { getControllerSearchProps } from 'foremanReact/constants';
 
 export const TASKS_TABLE_ID = 'TASKS_TABLE';
+export const TASK_DETAILS_ID = 'TASK_DETAILS';
 export const SELECT_ROWS = 'SELECT_ROWS';
 export const UNSELECT_ROWS = 'UNSELECT_ROWS';
 export const UNSELECT_ALL_ROWS = 'UNSELECT_ALL_ROWS';
@@ -16,5 +17,5 @@ export const UPDATE_CLICKED = 'UPDATE_CLICKED';
 
 export const TASKS_SEARCH_PROPS = {
   ...getControllerSearchProps('tasks'),
-  controller: 'foreman_tasks/tasks'
+  controller: 'foreman_tasks/tasks',
 };
