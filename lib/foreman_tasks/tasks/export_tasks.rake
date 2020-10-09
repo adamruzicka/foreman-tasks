@@ -30,6 +30,11 @@ namespace :foreman_tasks do
     class TaskRender
       def initialize
         @cache = {}
+
+        found_worlds = world.coordinator.find_worlds(false).reduce({}) do |acc, world|
+          acc.merge(world.id => '%{world_id} %{world_meta}' % { world_id: world.id, world_meta: world.meta.inspect})
+        end
+        @world_cache = Hash.new { |hash, key| hash[key] = key }.merge(found_worlds)
       end
 
       def h(foo)
@@ -107,11 +112,7 @@ namespace :foreman_tasks do
       end
 
       def show_world(world_id)
-        if (registered_world = world.coordinator.find_worlds(false, id: world_id).first)
-          '%{world_id} %{world_meta}' % { world_id: world_id, world_meta: registered_world.meta.inspect }
-        else
-          world_id
-        end
+        @world_cache[world_id]
       end
 
       def show_action_data(label, value)
