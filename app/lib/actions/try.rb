@@ -19,8 +19,7 @@ unless Rails.env.production?
           plan_self(hello: 'world')
         end
 
-        def run
-        end
+        def run; end
       end
 
       class Pause < Actions::EntryAction
