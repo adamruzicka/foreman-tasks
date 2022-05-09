@@ -32,6 +32,9 @@ module ForemanTasks
         cleanup_settings[:actions].each do |action|
           action_class = action[:name].constantize
           actions_with_periods[action_class] = action[:after]
+        rescue NameError
+          $stderr.puts "Unknown action #{action} configured for cleanup"
+          actions_with_periods[action_class] = action[:after]
         rescue => e
           Foreman::Logging.exception("Error handling #{action} cleanup settings", e)
         end
