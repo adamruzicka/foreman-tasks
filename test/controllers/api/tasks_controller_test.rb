@@ -1,4 +1,5 @@
 require 'foreman_tasks_test_helper'
+require_relative '../../support/tracked_active_job'
 
 module ForemanTasks
   class Api::TasksControllerTest < ActionController::TestCase
@@ -82,6 +83,16 @@ module ForemanTasks
       end
 
       describe 'GET /api/tasks/show' do
+        it 'shows a tracked ActiveJob without an execution plan' do
+          task = Support::TrackedActiveJob.perform_later('input').foreman_task
+          get :show, params: { id: task.id }
+          assert_response :success
+          data = JSON.parse(response.body)
+          assert_equal ['input'], data['input']
+          assert_same false, data['available_actions']['cancellable']
+          assert_same false, data['available_actions']['resumable']
+        end
+
         it 'searches for task' do
           task = FactoryBot.create(:dynflow_task, :user_create_task)
           get :show, params: { :id => task.id }
@@ -204,6 +215,23 @@ module ForemanTasks
       end
 
       describe 'GET /api/tasks/:id/details' do
+        it 'shows an ActiveJob failure without querying Dynflow dependencies' do
+          job = Support::FailingTrackedActiveJob.new
+          assert_raises(ArgumentError) { job.perform_now }
+          ForemanTasks.dynflow.world.persistence.expects(:find_execution_plan_dependencies).never
+          ForemanTasks.dynflow.world.persistence.expects(:find_blocked_execution_plans).never
+
+          get :details, params: { id: job.foreman_task.id }
+          assert_response :success
+          data = JSON.parse(response.body)
+          assert_nil data['execution_plan']
+          assert_equal 'job failed', data['failed_steps'].first['error']['message']
+          assert_empty data['running_steps']
+          assert_empty data['depends_on']
+          assert_empty data['blocks']
+          assert_same false, data['dynflow_enable_console']
+        end
+
         it 'shows task dependencies with correct task names' do
           # Tests https://projects.theforeman.org/issues/39130
           dependency_task = FactoryBot.create(:dynflow_task, :user_create_task, label: 'Actions::User::Create')
@@ -230,6 +258,20 @@ module ForemanTasks
       end
 
       describe 'POST /api/tasks/bulk_stop' do
+        it 'skips ActiveJob tasks when stopping a mixed selection' do
+          active_job_task = Support::TrackedActiveJob.perform_later.foreman_task
+          dynflow_task = FactoryBot.create(:dynflow_task, :user_create_task, state: 'pending')
+
+          post :bulk_stop, params: { task_ids: [active_job_task.id, dynflow_task.id] }
+          assert_response :success
+          data = JSON.parse(response.body)
+          assert_equal 2, data['total']
+          assert_equal 1, data['stopped_length']
+          assert_equal 1, data['skipped_length']
+          assert_equal 'pending', active_job_task.reload.state
+          wait_for { dynflow_task.reload.state == 'stopped' }
+        end
+
         it 'requires search or task_ids parameter' do
           post :bulk_stop
           assert_response :bad_request

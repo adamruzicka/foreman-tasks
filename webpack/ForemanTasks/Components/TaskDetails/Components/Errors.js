@@ -148,7 +148,7 @@ ErrorDetailsPane.defaultProps = {
   step: null,
 };
 
-const Errors = ({ executionPlan, failedSteps }) => {
+const Errors = ({ executionPlan, failedSteps, requiresExecutionPlan }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   useEffect(() => {
@@ -161,7 +161,7 @@ const Errors = ({ executionPlan, failedSteps }) => {
     });
   }, [failedSteps.length]);
 
-  if (!executionPlan) {
+  if (requiresExecutionPlan && !executionPlan) {
     return (
       <Alert
         title={__('Execution plan data not available ')}
@@ -239,11 +239,13 @@ const Errors = ({ executionPlan, failedSteps }) => {
 Errors.propTypes = {
   failedSteps: PropTypes.array,
   executionPlan: PropTypes.shape({}),
+  requiresExecutionPlan: PropTypes.bool,
 };
 
 Errors.defaultProps = {
   failedSteps: [],
   executionPlan: {},
+  requiresExecutionPlan: true,
 };
 
 export default Errors;

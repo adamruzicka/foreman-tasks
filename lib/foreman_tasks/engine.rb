@@ -157,6 +157,11 @@ module ForemanTasks
       end
     end
 
+    initializer 'foreman_tasks.active_job_tracking' do
+      require 'foreman_tasks/active_job/subscriber'
+      ForemanTasks::ActiveJob::Subscriber.subscribe
+    end
+
     initializer 'foreman_tasks.load_app_instance_data' do |app|
       ForemanTasks::Engine.paths['db/migrate'].existent.each do |path|
         app.config.paths['db/migrate'] << path

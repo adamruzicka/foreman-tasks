@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Alert, AlertVariant } from '@patternfly/react-core';
+import { translate as __ } from 'foremanReact/common/I18n';
 import RunningSteps from './Components/RunningSteps';
 import Errors from './Components/Errors';
 
@@ -13,6 +15,7 @@ const ExecutionDetails = ({
   executionPlan,
   failedSteps,
   result,
+  usesDynflow,
 }) => {
   const hasFailedSteps = failedSteps.length > 0;
   const hasRunningSteps = runningSteps.length > 0;
@@ -22,14 +25,28 @@ const ExecutionDetails = ({
   // Prefer Errors when failed steps exist (e.g. paused-after-error). Only fall
   // back to the RunningSteps empty state for active tasks with no failures.
   const showRunningSteps =
-    hasRunningSteps || (isActiveExecutionState && !hasFailedSteps);
-  const showErrors = hasFailedSteps || !showRunningSteps;
+    usesDynflow &&
+    (hasRunningSteps || (isActiveExecutionState && !hasFailedSteps));
+  const showJobStatus = !usesDynflow && state !== 'stopped' && !hasFailedSteps;
+  const showErrors = hasFailedSteps || (!showRunningSteps && !showJobStatus);
 
   return (
     <div
       id="execution-details-panel"
       data-ouia-component-id="execution-details-panel"
     >
+      {showJobStatus && (
+        <Alert
+          variant={AlertVariant.info}
+          isInline
+          title={
+            state === 'running'
+              ? __('Job is running')
+              : __('Job is waiting to run')
+          }
+          ouiaId="active-job-status"
+        />
+      )}
       {showRunningSteps && (
         <RunningSteps
           executionPlan={executionPlan}
@@ -42,7 +59,11 @@ const ExecutionDetails = ({
         />
       )}
       {showErrors && (
-        <Errors executionPlan={executionPlan} failedSteps={failedSteps} />
+        <Errors
+          executionPlan={executionPlan}
+          failedSteps={failedSteps}
+          requiresExecutionPlan={usesDynflow}
+        />
       )}
     </div>
   );
@@ -58,6 +79,7 @@ ExecutionDetails.propTypes = {
   taskReloadStart: PropTypes.func.isRequired,
   executionPlan: PropTypes.shape({}),
   failedSteps: PropTypes.array,
+  usesDynflow: PropTypes.bool,
 };
 
 ExecutionDetails.defaultProps = {
@@ -66,6 +88,7 @@ ExecutionDetails.defaultProps = {
   runningSteps: [],
   executionPlan: {},
   failedSteps: [],
+  usesDynflow: true,
 };
 
 export default ExecutionDetails;

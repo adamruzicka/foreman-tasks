@@ -28,6 +28,14 @@ module ForemanTasks
       execution_plan.try(:cancellable?)
     end
 
+    def stoppable?
+      pending?
+    end
+
+    def uses_dynflow?
+      true
+    end
+
     def cancel
       execution_plan!.cancel.any?
     end

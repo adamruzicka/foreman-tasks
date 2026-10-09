@@ -10,6 +10,7 @@ import './TaskButtons.scss';
 export const TaskButtons = ({
   canEdit,
   dynflowEnableConsole,
+  usesDynflow,
   taskReloadStart,
   taskProgressToggle,
   taskReload,
@@ -98,7 +99,9 @@ export const TaskButtons = ({
       isDisabled: !canEdit || state === 'stopped',
       tooltip: editActionsTitle,
     },
-  ];
+  ].filter(
+    item => usesDynflow || ['reload', 'parent', 'subtasks'].includes(item.value)
+  );
 
   return (
     <Flex
@@ -107,43 +110,47 @@ export const TaskButtons = ({
       alignItems={{ default: 'alignItemsCenter' }}
       spaceItems={{ default: 'spaceItemsSm' }}
     >
-      <FlexItem>
-        <Button
-          variant="secondary"
-          ouiaId="task-buttons-cancel-button"
-          className="cancel-button"
-          size="sm"
-          title={editActionsTitle}
-          data-original-title={editActionsTitle}
-          isDisabled={!canEdit || !cancellable}
-          onClick={() => {
-            if (!taskReload) {
-              taskReloadStart(id);
-            }
+      {usesDynflow && (
+        <FlexItem>
+          <Button
+            variant="secondary"
+            ouiaId="task-buttons-cancel-button"
+            className="cancel-button"
+            size="sm"
+            title={editActionsTitle}
+            data-original-title={editActionsTitle}
+            isDisabled={!canEdit || !cancellable}
+            onClick={() => {
+              if (!taskReload) {
+                taskReloadStart(id);
+              }
 
-            cancelTaskRequest(id, action);
-          }}
-        >
-          {__('Cancel')}
-        </Button>
-      </FlexItem>
-      <FlexItem>
-        <Button
-          variant="secondary"
-          ouiaId="task-buttons-dynflow-button"
-          className="dynflow-button"
-          size="sm"
-          component="a"
-          href={`/foreman_tasks/dynflow/${externalId}`}
-          isDisabled={!dynflowEnableConsole}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span title={dynflowTitle} data-original-title={dynflowTitle}>
-            {__('Dynflow console')}
-          </span>
-        </Button>
-      </FlexItem>
+              cancelTaskRequest(id, action);
+            }}
+          >
+            {__('Cancel')}
+          </Button>
+        </FlexItem>
+      )}
+      {usesDynflow && (
+        <FlexItem>
+          <Button
+            variant="secondary"
+            ouiaId="task-buttons-dynflow-button"
+            className="dynflow-button"
+            size="sm"
+            component="a"
+            href={`/foreman_tasks/dynflow/${externalId}`}
+            isDisabled={!dynflowEnableConsole}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span title={dynflowTitle} data-original-title={dynflowTitle}>
+              {__('Dynflow console')}
+            </span>
+          </Button>
+        </FlexItem>
+      )}
       <FlexItem>
         <SimpleDropdown
           ouiaId="task-buttons-overflow-dropdown"
@@ -161,6 +168,7 @@ export const TaskButtons = ({
 export const TaskButtonspropTypes = {
   canEdit: PropTypes.bool,
   dynflowEnableConsole: PropTypes.bool,
+  usesDynflow: PropTypes.bool,
   taskReloadStart: PropTypes.func.isRequired,
   taskProgressToggle: PropTypes.func.isRequired,
   taskReload: PropTypes.bool,
@@ -178,6 +186,7 @@ export const TaskButtonspropTypes = {
 export const TaskButtonsdefaultProps = {
   canEdit: false,
   dynflowEnableConsole: false,
+  usesDynflow: true,
   taskReload: false,
   externalId: '',
   action: '',

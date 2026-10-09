@@ -151,6 +151,14 @@ module ForemanTasks
       false
     end
 
+    def cancellable?
+      false
+    end
+
+    def stoppable?
+      false
+    end
+
     def paused?
       state == 'paused'
     end
@@ -253,6 +261,7 @@ module ForemanTasks
     end
 
     def action_continuous_output
+      return unless respond_to?(:main_action)
       return unless main_action.is_a?(Actions::Helpers::WithContinuousOutput)
       main_action.continuous_output.sort!
       main_action.continuous_output.raw_outputs

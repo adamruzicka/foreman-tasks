@@ -1,5 +1,11 @@
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { TaskButtons } from '../TaskButtons';
@@ -34,6 +40,30 @@ describe('TaskButtons', () => {
   });
 
   describe('rendering', () => {
+    it('hides Dynflow controls for an ActiveJob task', async () => {
+      render(
+        <TaskButtons
+          {...defaultProps}
+          canEdit
+          state="running"
+          usesDynflow={false}
+        />
+      );
+      expect(
+        screen.queryByRole('link', { name: /dynflow console/i })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /^cancel$/i })
+      ).not.toBeInTheDocument();
+      await openTaskActionsMenu();
+      expect(
+        screen.queryByRole('menuitem', { name: /force unlock/i })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('menuitem', { name: /^resume$/i })
+      ).not.toBeInTheDocument();
+    });
+
     it('shows start auto-reloading in overflow when taskReload is false', async () => {
       render(<TaskButtons {...defaultProps} taskReload={false} />);
       await openTaskActionsMenu();
@@ -100,13 +130,17 @@ describe('TaskButtons', () => {
       render(<TaskButtons {...defaultProps} canEdit={false} />);
       expect(screen.getByRole('button', { name: /cancel/i })).toBeDisabled();
       await openTaskActionsMenu();
-      expect(screen.getByRole('menuitem', { name: /^resume$/i })).toBeDisabled();
+      expect(
+        screen.getByRole('menuitem', { name: /^resume$/i })
+      ).toBeDisabled();
     });
 
     it('disables resume overflow item when resumable is false', async () => {
       render(<TaskButtons {...defaultProps} canEdit resumable={false} />);
       await openTaskActionsMenu();
-      expect(screen.getByRole('menuitem', { name: /^resume$/i })).toBeDisabled();
+      expect(
+        screen.getByRole('menuitem', { name: /^resume$/i })
+      ).toBeDisabled();
     });
 
     it('disables cancel button when cancellable is false', () => {
@@ -117,25 +151,33 @@ describe('TaskButtons', () => {
     it('disables unlock overflow item when state is not paused', async () => {
       render(<TaskButtons {...defaultProps} canEdit state="running" />);
       await openTaskActionsMenu();
-      expect(screen.getByRole('menuitem', { name: /^unlock$/i })).toBeDisabled();
+      expect(
+        screen.getByRole('menuitem', { name: /^unlock$/i })
+      ).toBeDisabled();
     });
 
     it('enables unlock overflow item when state is paused and canEdit is true', async () => {
       render(<TaskButtons {...defaultProps} canEdit state="paused" />);
       await openTaskActionsMenu();
-      expect(screen.getByRole('menuitem', { name: /^unlock$/i })).not.toBeDisabled();
+      expect(
+        screen.getByRole('menuitem', { name: /^unlock$/i })
+      ).not.toBeDisabled();
     });
 
     it('disables force unlock overflow item when state is stopped', async () => {
       render(<TaskButtons {...defaultProps} canEdit state="stopped" />);
       await openTaskActionsMenu();
-      expect(screen.getByRole('menuitem', { name: /force unlock/i })).toBeDisabled();
+      expect(
+        screen.getByRole('menuitem', { name: /force unlock/i })
+      ).toBeDisabled();
     });
 
     it('enables force unlock overflow item when state is not stopped and canEdit is true', async () => {
       render(<TaskButtons {...defaultProps} canEdit state="running" />);
       await openTaskActionsMenu();
-      expect(screen.getByRole('menuitem', { name: /force unlock/i })).not.toBeDisabled();
+      expect(
+        screen.getByRole('menuitem', { name: /force unlock/i })
+      ).not.toBeDisabled();
     });
 
     it('includes parent task overflow link when parentTask is provided', async () => {

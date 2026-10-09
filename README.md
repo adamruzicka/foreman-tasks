@@ -89,6 +89,56 @@ Features
   conflicting tasks on one resource.
 * Dynflow integration allowing async processing, workflows definitions etc.
 
+ActiveJob integration
+---------------------
+
+Jobs can opt into lightweight Foreman Tasks tracking with any non-Dynflow ActiveJob
+adapter. Configure the adapter centrally in an initializer, before loading opted-in
+job classes. For example, a deployment using Sidekiq would configure:
+
+```ruby
+ForemanTasks.active_job_queue_adapter = :sidekiq
+```
+
+Then include the public concern in each job to migrate:
+
+```ruby
+class CheapJob < ApplicationJob
+  include ForemanTasks::ActiveJob::Tracked
+
+  def perform(value)
+    # Perform the background work.
+  end
+end
+```
+
+The central value accepts the same adapter names and instances as ActiveJob's
+`queue_adapter`. It must be configured explicitly. Changes take effect when job
+classes are loaded on application restart. The global Dynflow adapter and jobs
+without the concern keep their existing behavior. The integration does not depend
+on Sidekiq or install backend middleware.
+
+`Tracked` composes `ForemanTasks::ActiveJob::AdapterSelection` and
+`ForemanTasks::ActiveJob::TaskTracking`. The latter can be included independently
+when a job already selects its own non-Dynflow adapter.
+
+Each logical job has one `ForemanTasks::Task::ActiveJobTask`, available through
+`job.foreman_task`, identified by ActiveJob's `job_id`. The optional
+`provider_job_id` is exposed as the task's `external_id`. Task details retain
+serialized inputs, status, timing, owner, humanized presentation, and the latest
+error. The initiating user, organization, location, and request ID are restored
+for execution. Rails handles the job's locale and timezone.
+
+ActiveJob's `retry_on`, `retry_job`, and `discard_on` retain their normal semantics.
+Retries update the existing task. A failure escaping ActiveJob records a failed
+attempt; a backend may retry that same job independently. Backend retries, queue
+deletion, and worker termination are outside ActiveJob's generic tracking hooks.
+These tasks do not expose cancellation, manual resume, or Dynflow controls.
+
+Direct `perform_now` execution is also tracked. Arguments that ActiveJob cannot
+serialize for a queue are represented as inspected strings in the task input,
+without preventing synchronous execution.
+
 
 Dynflow Integration
 -------------------

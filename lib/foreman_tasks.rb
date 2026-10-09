@@ -12,6 +12,8 @@ module ForemanTasks
   extend Algebrick::TypeCheck
   extend Algebrick::Matching
 
+  mattr_accessor :active_job_queue_adapter
+
   def self.dynflow
     @dynflow ||= ForemanTasks::Dynflow.new(nil, ForemanTasks::Dynflow::Configuration.new)
   end

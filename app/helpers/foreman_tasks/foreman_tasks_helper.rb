@@ -17,7 +17,7 @@ module ForemanTasks
     end
 
     def troubleshooting_info
-      return if @task.state != 'paused' || @task.main_action.nil?
+      return if @task.state != 'paused' || !@task.respond_to?(:main_action) || @task.main_action.nil?
       helper = TroubleshootingHelpGenerator.new(@task.main_action)
       ret = '<p><b>Troubleshooting</b></p>'
       ret += '<p>%{help}</p>' % { help: helper.generate_html }
@@ -25,7 +25,7 @@ module ForemanTasks
     end
 
     def troubleshooting_info_text
-      return if @task.state != 'paused' || @task.main_action.nil?
+      return if @task.state != 'paused' || !@task.respond_to?(:main_action) || @task.main_action.nil?
       helper = TroubleshootingHelpGenerator.new(@task.main_action)
       helper.generate_html
     end

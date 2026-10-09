@@ -11,7 +11,7 @@ module UINotifications
 
       def troubleshooting_help_generator
         return @troubleshooting_help_generator if defined? @troubleshooting_help_generator
-        @troubleshooting_help_generator = if @task.main_action
+        @troubleshooting_help_generator = if @task.respond_to?(:main_action) && @task.main_action
                                             ForemanTasks::TroubleshootingHelpGenerator.new(@task.main_action)
                                           end
       end

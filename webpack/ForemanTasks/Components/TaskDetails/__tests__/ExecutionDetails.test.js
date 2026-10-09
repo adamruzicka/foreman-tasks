@@ -16,6 +16,49 @@ const rtlBaseProps = {
 };
 
 describe('ExecutionDetails', () => {
+  it('shows ActiveJob errors without requiring an execution plan', () => {
+    render(
+      <ExecutionDetails
+        {...rtlBaseProps}
+        state="stopped"
+        usesDynflow={false}
+        executionPlan={null}
+        failedSteps={[
+          {
+            action_class: 'CheapJob',
+            state: 'error',
+            error: {
+              exception_class: 'ArgumentError',
+              message: 'cheap job failed',
+              backtrace: ['job.rb:10'],
+            },
+            input: '[]',
+            output: '{}',
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText('cheap job failed')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/execution plan data not available/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a waiting ActiveJob without reporting successful completion', () => {
+    render(
+      <ExecutionDetails
+        {...rtlBaseProps}
+        state="scheduled"
+        usesDynflow={false}
+        executionPlan={null}
+      />
+    );
+
+    expect(screen.getByText(/job is waiting to run/i)).toBeInTheDocument();
+    expect(screen.queryByText(/no errors found/i)).not.toBeInTheDocument();
+  });
+
   it('renders execution details panel with OUIA id', () => {
     render(
       <ExecutionDetails

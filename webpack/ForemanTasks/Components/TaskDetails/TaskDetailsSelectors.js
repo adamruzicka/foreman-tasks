@@ -52,6 +52,9 @@ export const selectLabel = state => selectTaskDetailsResponse(state)?.label;
 export const selectExecutionPlan = state =>
   selectTaskDetailsResponse(state).execution_plan || {};
 
+export const selectUsesDynflow = state =>
+  selectTaskDetailsResponse(state).uses_dynflow !== false;
+
 export const selectFailedSteps = state =>
   selectTaskDetailsResponse(state).failed_steps || [];
 

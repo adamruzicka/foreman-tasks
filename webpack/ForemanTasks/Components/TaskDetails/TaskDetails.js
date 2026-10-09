@@ -120,6 +120,7 @@ const TaskDetails = ({
               taskReload={taskReload}
               taskReloadStart={taskReloadStart}
               executionPlan={executionPlan}
+              usesDynflow={props.usesDynflow}
               failedSteps={failedSteps}
             />
           )}
@@ -181,6 +182,7 @@ TaskDetails.propTypes = {
   blocks: PropTypes.array,
   executionPlan: PropTypes.shape({}),
   failedSteps: PropTypes.array,
+  usesDynflow: PropTypes.bool,
   ...Task.propTypes,
   ...Locks.propTypes,
   ...Raw.propTypes,
@@ -194,6 +196,7 @@ TaskDetails.defaultProps = {
   blocks: [],
   failedSteps: [],
   executionPlan: {},
+  usesDynflow: true,
   ...Task.defaultProps,
   ...Locks.defaultProps,
   ...Raw.defaultProps,
